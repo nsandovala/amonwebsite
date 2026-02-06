@@ -1,7 +1,14 @@
+"use client";
+
+import { HoneycombField } from "../ui/HoneycombField";
+
 export function Footer() {
     return (
-        <footer className="bg-white border-t border-neutral-100 py-12 px-4">
-            <div className="container max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <footer className="relative bg-white border-t border-neutral-100 py-12 px-4 overflow-hidden">
+            {/* Honeycomb Nebula Effect (subtle) */}
+            <HoneycombField mode="footer" />
+
+            <div className="container relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex flex-col gap-2">
                     <div className="text-sm text-neutral-500">
                         © {new Date().getFullYear()} AMON. Todos los derechos reservados.

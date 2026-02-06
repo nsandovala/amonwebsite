@@ -6,6 +6,7 @@ import { MagneticButton } from "../ui/MagneticButton";
 import { fadeUp } from "@/lib/animations";
 import { useState, useRef } from "react";
 import { InstallModal } from "../ui/InstallModal";
+import { HoneycombField } from "../ui/HoneycombField";
 import Link from "next/link";
 
 export function Hero() {
@@ -31,6 +32,9 @@ export function Hero() {
             onMouseMove={handleMouseMove}
             className="relative min-h-[90vh] flex flex-col items-center justify-center overflow-hidden px-4 py-20 bg-background"
         >
+            {/* Honeycomb Nebula Effect */}
+            <HoneycombField mode="hero" />
+
             {/* Mouse Aura (Desktop Only) */}
             <motion.div
                 style={{ x: springX, y: springY }}
