@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 interface HoneycombFieldProps {
     mode?: "hero" | "footer";
     density?: number;
-    accentColor?: string;
 }
 
 interface Particle {
@@ -17,33 +16,49 @@ interface Particle {
     vy: number;
 }
 
-export function HoneycombField({ mode = "hero", density, accentColor = "#000000" }: HoneycombFieldProps) {
+// Warm scientific energy color system
+const GLOW_COLOR = "rgba(255,214,102,0.22)";
+const PARTICLE_COLOR = "rgba(255,214,102,0.55)";
+const LINE_COLOR = "rgba(255,214,102,0.15)";
+
+// Enhanced interaction parameters
+const INTERACTION_RADIUS = 140;
+const FORCE_STRENGTH = 0.08;
+
+export function HoneycombField({ mode = "hero", density }: HoneycombFieldProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const animationFrameRef = useRef<number>();
     const particlesRef = useRef<Particle[]>([]);
     const mouseRef = useRef({ x: -1000, y: -1000 });
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+    const isVisibleRef = useRef(true);
+
+    // Detect mobile for particle reduction
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const mobileReduction = isMobile ? 0.6 : 1;
 
     // Configuration based on mode
     const config = {
         hero: {
-            particleCount: density ?? 80,
+            particleCount: Math.floor((density ?? 80) * mobileReduction),
             connectionDistance: 120,
-            repelDistance: 150,
-            repelStrength: 0.8,
+            repelDistance: INTERACTION_RADIUS,
+            repelStrength: FORCE_STRENGTH,
             lineOpacity: 0.15,
-            dotOpacity: 0.3,
+            dotOpacity: 0.55,
             sparkProbability: 0.02,
+            forceMultiplier: 1.0,
         },
         footer: {
-            particleCount: density ?? 40,
+            particleCount: Math.floor((density ?? 40) * mobileReduction),
             connectionDistance: 100,
-            repelDistance: 120,
-            repelStrength: 0.5,
+            repelDistance: INTERACTION_RADIUS,
+            repelStrength: FORCE_STRENGTH * 0.6, // Softer for footer
             lineOpacity: 0.08,
-            dotOpacity: 0.2,
+            dotOpacity: 0.35,
             sparkProbability: 0.01,
+            forceMultiplier: 0.6,
         }
     }[mode];
 
@@ -70,13 +85,20 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
 
         let width = 0;
         let height = 0;
+        const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
 
         const resizeCanvas = () => {
             const rect = container.getBoundingClientRect();
             width = rect.width;
             height = rect.height;
-            canvas.width = width;
-            canvas.height = height;
+
+            // Apply devicePixelRatio for sharp rendering
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            ctx.scale(dpr, dpr);
+
             initParticles();
         };
 
@@ -133,8 +155,16 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
             mouseRef.current.y = -1000;
         };
 
+        // Pause animation when tab not visible
+        const handleVisibilityChange = () => {
+            isVisibleRef.current = !document.hidden;
+            if (isVisibleRef.current && !prefersReducedMotion) {
+                animate();
+            }
+        };
+
         const animate = () => {
-            if (!ctx || prefersReducedMotion) return;
+            if (!ctx || prefersReducedMotion || !isVisibleRef.current) return;
 
             ctx.clearRect(0, 0, width, height);
 
@@ -144,22 +174,22 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
 
             // Update particles
             particles.forEach((p) => {
-                // Subtle jitter
+                // Subtle jitter for organic feel
                 const jitterX = Math.sin(time + p.baseX * 0.01) * 0.5;
                 const jitterY = Math.cos(time + p.baseY * 0.01) * 0.5;
 
-                // Mouse repulsion
+                // Mouse repulsion with enhanced parameters
                 const dx = p.x - mouse.x;
                 const dy = p.y - mouse.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < config.repelDistance) {
                     const force = (1 - dist / config.repelDistance) * config.repelStrength;
-                    p.vx += (dx / dist) * force * 2;
-                    p.vy += (dy / dist) * force * 2;
+                    p.vx += (dx / dist) * force * 3;
+                    p.vy += (dy / dist) * force * 3;
                 }
 
-                // Spring back to base position
+                // Spring back to base position (reconnect to grid)
                 p.vx += (p.baseX - p.x) * 0.05;
                 p.vy += (p.baseY - p.y) * 0.05;
 
@@ -172,8 +202,8 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
                 p.y += p.vy + jitterY;
             });
 
-            // Draw connections
-            ctx.strokeStyle = accentColor;
+            // Draw connections with warm yellow
+            ctx.strokeStyle = LINE_COLOR;
             particles.forEach((p1, i) => {
                 particles.slice(i + 1).forEach((p2) => {
                     const dx = p1.x - p2.x;
@@ -193,14 +223,23 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
                 });
             });
 
-            // Draw particles
-            ctx.fillStyle = accentColor;
+            // Draw particles with warm yellow and glow
             particles.forEach((p) => {
                 const isSpark = Math.random() < config.sparkProbability;
-                const size = isSpark ? 2 : 1;
-                const opacity = isSpark ? config.dotOpacity * 1.5 : config.dotOpacity;
+                const size = isSpark ? 2.5 : 1.2;
 
-                ctx.globalAlpha = opacity;
+                // Glow effect for sparks
+                if (isSpark) {
+                    ctx.fillStyle = GLOW_COLOR;
+                    ctx.globalAlpha = 0.6;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Main particle
+                ctx.fillStyle = PARTICLE_COLOR;
+                ctx.globalAlpha = isSpark ? 0.8 : config.dotOpacity;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
                 ctx.fill();
@@ -217,6 +256,7 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
 
         container.addEventListener("pointermove", handlePointerMove);
         container.addEventListener("pointerleave", handlePointerLeave);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
         resizeCanvas();
 
@@ -229,11 +269,12 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
             resizeObserver.disconnect();
             container.removeEventListener("pointermove", handlePointerMove);
             container.removeEventListener("pointerleave", handlePointerLeave);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, [config, accentColor, prefersReducedMotion]);
+    }, [config, prefersReducedMotion]);
 
     if (prefersReducedMotion) {
         return null; // Disable effect entirely for reduced motion
