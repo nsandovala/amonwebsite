@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ChatMessage {
+  id         String     @id
+  threadId   String
+  role       String
+  content    String
+  model      String?
+  tokensIn   Int?
+  tokensOut  Int?
+  createdAt  DateTime   @default(now())
+  provider   String?
+  ChatThread ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([threadId])
+}
+
+model ChatThread {
+  id            String        @id
+  userId        String
+  title         String?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  lastMessageAt DateTime?     @db.Timestamptz(6)
+  summary       String?
+  expiresAt     DateTime?
+  mode          String        @default("GENERAL")
+  category      String?
+  color         String?
+  isArchived    Boolean       @default(false)
+  isFavorite    Boolean       @default(false)
+  reminderAt    DateTime?
+  reminderNote  String?
+  tags          String[]      @default([])
+  allergies     String[]      @default([])
+  attachments   String[]      @default([])
+  diagnosis     String?
+  doctorNotes   String?
+  followUpDate  DateTime?
+  isAnonymized  Boolean       @default(true)
+  medicalType   String?
+  medications   Json?
+  symptoms      String[]      @default([])
+  vitalSigns    Json?
+  ChatMessage   ChatMessage[]
+  User          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([category])
+  @@index([expiresAt])
+  @@index([followUpDate])
+  @@index([isActive])
+  @@index([isArchived])
+  @@index([isFavorite])
+  @@index([lastMessageAt])
+  @@index([medicalType])
+  @@index([mode])
+  @@index([reminderAt])
+  @@index([updatedAt])
+  @@index([userId])
+}
+
+model FlowSubscription {
+  id              String    @id
+  userId          String
+  flowOrderId     String    @unique
+  flowToken       String?
+  plan            String
+  status          String
+  amount          Int
+  currency        String    @default("CLP")
+  paymentMethod   String?
+  nextBillingDate DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  paidAt          DateTime?
+  expiresAt       DateTime?
+
+  @@index([flowOrderId])
+  @@index([nextBillingDate])
+  @@index([status])
+  @@index([userId])
+}
+
+model KidsEvent {
+  id        String   @id
+  userId    String
+  sessionId String?
+  eventType String
+  meta      Json?
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model KidsMessage {
+  id          String      @id
+  sessionId   String
+  role        String
+  contentSafe String
+  route       String?
+  createdAt   DateTime    @default(now())
+  KidsSession KidsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+
+model KidsProfile {
+  id             String   @id
+  userId         String   @unique
+  age            Int?
+  adultAvailable String   @default("NO_SE")
+  mode           String   @default("KIDS")
+  country        String?
+  city           String?
+  preference     String   @default("TEXT")
+  sensitivity    String   @default("NORMAL")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model KidsSession {
+  id          String        @id
+  userId      String
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  locale      String        @default("es")
+  summary     String?
+  tags        String[]      @default([])
+  KidsMessage KidsMessage[]
+  User        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([startedAt])
+  @@index([userId])
+}
+
+model RadarEntry {
+  id            String   @id
+  userId        String
+  type          String
+  description   String
+  context       String?
+  target        String?
+  nextStep      String
+  priority      String
+  status        String   @default("CAPTURADA")
+  tags          String[] @default([])
+  timeline      String?
+  resources     String?
+  collaborators String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  analysis      String?
+  summary       String?
+  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([priority])
+  @@index([status])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expires])
+  @@index([userId])
+}
+
+model UsageCounter {
+  userId    String
+  dayKey    String
+  updatedAt DateTime
+  id        String   @id
+  usedChars Int      @default(0)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayKey])
+  @@index([dayKey])
+  @@index([userId])
+}
+
+model User {
+  id              String            @id
+  name            String?
+  email           String            @unique
+  passwordHash    String
+  role            String            @default("USER_FREE")
+  createdAt       DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime          @default(now()) @db.Timestamptz(6)
+  acceptedTosAt   DateTime?
+  proExpiresAt    DateTime?
+  proStartedAt    DateTime?
+  ChatThread      ChatThread[]
+  KidsEvent       KidsEvent[]
+  KidsProfile     KidsProfile?
+  KidsSession     KidsSession[]
+  RadarEntry      RadarEntry[]
+  Session         Session[]
+  UsageCounter    UsageCounter[]
+  VoiceUsageDaily VoiceUsageDaily[]
+
+  @@index([email])
+  @@index([proExpiresAt])
+  @@index([role])
+}
+
+model VoiceUsageDaily {
+  id        String   @id
+  userId    String
+  dateKey   String
+  seconds   Int      @default(0)
+  requests  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dateKey])
+  @@index([dateKey])
+  @@index([updatedAt])
+  @@index([userId])
+}
+
+enum MeetingRequestStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+model MeetingRequest {
+  id        String               @id @default(cuid())
+  name      String
+  email     String
+  org       String?
+  orgType   String?
+  role      String?
+  topic     String?
+  message   String?
+  country   String?
+  source    String               @default("amonwebsite")
+  status    MeetingRequestStatus @default(NEW)
+  createdAt DateTime             @default(now())
+
+  @@index([email, createdAt])
+  @@index([status, createdAt])
+}

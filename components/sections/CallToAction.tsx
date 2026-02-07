@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { MagneticButton } from "../ui/MagneticButton";
 import { fadeUp } from "@/lib/animations";
-import { Download, Monitor, Smartphone } from "lucide-react";
+import { Download, Monitor, Smartphone, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { InstallModal } from "../ui/InstallModal";
+import MeetingRequestModal from "../MeetingRequestModal";
 
 export function CallToAction() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,20 +25,18 @@ export function CallToAction() {
                         El futuro del bienestar comienza con infraestructura inteligente.
                     </h2>
 
-                    {/* Form placeholder */}
-                    <div className="max-w-md mx-auto mt-8 flex flex-col sm:flex-row gap-3">
-                        <input
-                            type="email"
-                            placeholder="tu@email.com"
-                            className="flex-1 px-4 py-3 rounded-full border border-neutral-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all bg-white"
-                        />
-                        <MagneticButton className="whitespace-nowrap">
-                            Solicitar Acceso
+                    {/* Replaced Email Input with Meeting Request Button */}
+                    <div className="flex justify-center pt-4">
+                        <MagneticButton
+                            className="h-14 px-8 text-lg shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            Solicitar reunión <ArrowRight className="ml-2 w-5 h-5" />
                         </MagneticButton>
                     </div>
 
-                    <p className="text-xs text-neutral-400 mt-4">
-                        Únete a la lista de espera para early access.
+                    <p className="text-sm text-neutral-400 mt-4 max-w-md mx-auto">
+                        Agenda una demostración personalizada para tu organización.
                     </p>
                 </motion.div>
 
@@ -83,7 +82,8 @@ export function CallToAction() {
                 </motion.div>
             </div>
 
-            <InstallModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <MeetingRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <InstallModal isOpen={false} onClose={() => { }} />
         </section>
     );
 }

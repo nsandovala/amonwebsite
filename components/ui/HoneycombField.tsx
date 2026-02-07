@@ -208,6 +208,18 @@ export function HoneycombField({ mode = "hero", density, accentColor = "#000000"
 
             ctx.globalAlpha = 1;
 
+            // Draw Mouse Glow (Desktop Only)
+            if (window.matchMedia("(hover: hover)").matches && mouse.x > 0) {
+                const glowGradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 200);
+                glowGradient.addColorStop(0, "rgba(255, 230, 100, 0.06)"); // Matte yellow center
+                glowGradient.addColorStop(1, "rgba(255, 230, 100, 0)"); // Fade out
+
+                ctx.save();
+                ctx.fillStyle = glowGradient;
+                ctx.fillRect(0, 0, width, height);
+                ctx.restore();
+            }
+
             animationFrameRef.current = requestAnimationFrame(animate);
         };
 
