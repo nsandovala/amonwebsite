@@ -210,7 +210,7 @@ export default function MeetingRequestModal({ isOpen, onClose }: MeetingRequestM
                                                 <div className="flex flex-col gap-1">
                                                     <p>{errorMessage}</p>
                                                     <a
-                                                        href="mailto:contacto@amon.com"
+                                                        href="mailto:amon360.cl@gmail.com"
                                                         className="underline font-medium hover:text-red-700"
                                                     >
                                                         Contactar por correo
